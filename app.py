@@ -6,7 +6,7 @@ from pathlib import Path
 # ----------------------------
 # 1️⃣ Page Config & Custom CSS
 # ----------------------------
-st.set_page_config(page_title="🌿 Leaf Disease Detection", page_icon="🍃", layout="wide")
+st.set_page_config(page_title="Leaf Disease Detection", page_icon="🍃", layout="wide")
 
 # Custom CSS for styling
 st.markdown(
@@ -58,7 +58,7 @@ with st.sidebar:
 
     st.markdown(
         """
-        <h2 style='color:#1B5E20;;'>🍃  Leaf Disease Detection </h2>
+        <h2 style='color:#1B5E20;;'>🍃 Leaf Disease Detection </h2>
         <h3 style="color:#2E7D32; font-weight:bold;">How it works:</h3>
         <ol style="color:#4A8C2F; padding-left: 20px;">
             <li>Upload a clear leaf image</li>
