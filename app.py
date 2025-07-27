@@ -2,48 +2,58 @@ import streamlit as st
 from ultralytics import YOLO
 from PIL import Image
 from pathlib import Path
+import numpy as np
 
 # ----------------------------
-# 1️⃣ Page Config & Custom CSS
+# Page Config & Styles
 # ----------------------------
-st.set_page_config(page_title="Leaf Disease Detection", page_icon="🍃", layout="wide")
+st.set_page_config(page_title="Banana Disease Detection", page_icon="🍌", layout="centered")
 
-# Custom CSS for styling
 st.markdown(
     """
     <style>
-    /* Center main titles */
-    .css-10trblm { text-align: center; font-size: 28px; font-weight: bold; }
-
-    /* Modern buttons */
+    h1 {
+        text-align: center;
+        background: linear-gradient(90deg, #FFB300, #FF6F00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 2.5em;
+        font-weight: bold;
+    }
     div.stButton > button {
-        background-color: #4CAF50;
-        color: white;
+        background: #FFA000;
+        color: #000000;
         border-radius: 10px;
         padding: 0.6em 1em;
         font-size: 16px;
         font-weight: bold;
+        border: none;
+        margin-bottom: 10px;
     }
-
-    /* Sidebar background */
+    div.stButton > button:hover {
+        background: #FFC107;
+        color: #000000;
+    }
     [data-testid="stSidebar"] {
-        background: #f4f9f4;
+        background: #FFF9E5;
+        color: #212121;
     }
-
-    /* Detection result cards */
-    .result-card {
-        background: #f1fff1;
+    .custom-tip {
+        background-color: #FFF176;
+        color: #212121;
         padding: 10px;
+        border-radius: 8px;
+        border-left: 6px solid #FBC02D;
+        font-weight: bold;
+    }
+    .result-card {
+        background: #FFF8E1;
+        padding: 12px;
         border-radius: 10px;
         margin: 8px 0;
         font-size: 16px;
-        border-left: 5px solid #4CAF50;
-        color: #000000; /* Force black text */
-    }
-
-    /* General heading color */
-    h3 {
-        color: #1B5E20 !important;
+        border-left: 5px solid #FFB300;
+        color: #000000;
     }
     </style>
     """,
@@ -51,130 +61,107 @@ st.markdown(
 )
 
 # ----------------------------
-# 2️⃣ Sidebar with colored text and styled tip box
+# Sidebar Instructions
 # ----------------------------
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/7666/7666443.png", width=100)
-
     st.markdown(
         """
-        <h2 style='color:#1B5E20;;'>🍃 Leaf Disease Detection </h2>
-        <h3 style="color:#2E7D32; font-weight:bold;">How it works:</h3>
-        <ol style="color:#4A8C2F; padding-left: 20px;">
-            <li>Upload a clear leaf image</li>
-            <li>Click <b>Detect</b></li>
-            <li>View annotated result + disease prediction</li>
+        <h2 style='color:#E65100;'>🍌 Banana Disease Detection</h2>
+        <h3 style="color:#FF6F00; font-weight:bold;">How it works:</h3>
+        <ol style="color:#3E2723;">
+            <li>Click <b>Access Camera</b> to enable camera preview and capture</li>
+            <li>OR Upload a clear banana leaf image</li>
+            <li>Click <b>Detect Disease</b></li>
+            <li>View annotated result</li>
         </ol>
-        <p style="color:#1B5E20; font-weight:bold;">Model: YOLOv8 Custom</p>
-
-        <style>
-        /* Change the color and background of the info box */
-        div[role="alert"] {
-            background-color: #DFF0D8 !important;
-            color: #3C763D !important;
-            border-left: 6px solid #4CAF50 !important;
-            font-weight: 600;
-        }
-        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        """
+        <div class="custom-tip">
+        💡 Use <b>clear, well-lit banana leaf images</b> for the most accurate results.
+        </div>
         """,
         unsafe_allow_html=True
     )
 
-    st.info("💡 Tip: Use well-lit, clear images for best results")
-
 # ----------------------------
-# 3️⃣ Load Model (cached)
+# Load YOLO Model
 # ----------------------------
 @st.cache_resource
 def load_model():
-    return YOLO("best.pt")
+    model = YOLO("best.pt")  # Make sure best.pt is in same folder
+    return model
 
 model = load_model()
 
 # ----------------------------
-# 4️⃣ Main Title with blue color
+# Title
 # ----------------------------
-st.markdown("<h2 style='text-align:center; color:#1565C0;'>🌱 Leaf Disease Detection </h2>", unsafe_allow_html=True)
-st.write("Upload a leaf image and let the AI model detect diseases with confidence levels.")
+st.markdown("<h1>🍌 Banana Disease Detection </h1>", unsafe_allow_html=True)
+st.write("Choose an option below to provide a banana leaf image for detection:")
 
 # ----------------------------
-# 5️⃣ Upload Section with white tips list on dark background
+# Initialize camera access flag
 # ----------------------------
-col1, col2 = st.columns([1, 1])
+if "camera_access" not in st.session_state:
+    st.session_state.camera_access = False
+
+# ----------------------------
+# Layout: Two columns for Camera Access button & File uploader
+# ----------------------------
+col1, col2 = st.columns(2)
+
+selected_image = None
 
 with col1:
-    uploaded_file = st.file_uploader("📷 Upload a Leaf Image", type=["jpg", "jpeg", "png"])
+    if not st.session_state.camera_access:
+        if st.button("📸 Access Camera"):
+            st.session_state.camera_access = True
+    else:
+        # Show cancel button to close camera preview
+        if st.button("❌ Cancel Camera Access"):
+            st.session_state.camera_access = False
+
+        cam_img = st.camera_input("Capture Banana Leaf")
+        if cam_img:
+            selected_image = Image.open(cam_img)
 
 with col2:
-    st.markdown(
-        """
-        <h3 style="color:#E65100;">📝 Tips for Better Detection</h3>
-        <ul style="color:#FFFFFF; background-color:#4A8C2F; padding:10px; border-radius:8px;">
-            <li>✅ Use <b>clear, high-resolution</b> images</li>
-            <li>✅ Avoid <b>blurry photos</b></li>
-            <li>✅ Ensure <b>good lighting</b></li>
-            <li>✅ Only <b>one leaf per image</b> for best accuracy</li>
-        </ul>
-        """,
-        unsafe_allow_html=True
-    )
+    uploaded_img = st.file_uploader("📂 Upload a Banana Leaf Image", type=["jpg", "jpeg", "png"])
+    if uploaded_img:
+        selected_image = Image.open(uploaded_img)
 
 # ----------------------------
-# 6️⃣ Detection Section
+# Detection Logic
 # ----------------------------
-if uploaded_file is not None:
-    # Show uploaded image
-    image = Image.open(uploaded_file)
-    st.image(image, caption="📥 Uploaded Image", use_column_width=True)
+if selected_image:
+    st.image(selected_image, caption="📥 Selected Banana Leaf", use_column_width=True)
 
-    # Detection button
-    detect_btn = st.button("🚀 Detect Disease")
+    if st.button("🚀 Detect Disease"):
+        with st.spinner("🔄 Analyzing leaf for diseases..."):
 
-    if detect_btn:
-        st.write("🔄 Running model...")
-        results = model.predict(image, save=True)  # YOLO prediction & save annotated image
+            img_np = np.array(selected_image)
 
-        if results:
-            # Get result image path
-            img_path = Path(results[0].path)         # Original filename
-            save_dir = Path(results[0].save_dir)     # Output dir
-            result_img_path = save_dir / img_path.name  # Final saved result path
+            results = model.predict(img_np, conf=0.1, iou=0.3, save=True)
 
-            # Show detection result image
-            st.markdown(
-                "<h3 style='color:#1B5E20; background:#E8F5E9; padding:6px; border-radius:6px;'>✅ Detection Result</h3>",
-                unsafe_allow_html=True
-            )
+        if results and len(results[0].boxes) > 0:
+            img_path = Path(results[0].path)
+            save_dir = Path(results[0].save_dir)
+            result_img_path = save_dir / img_path.name
+
+            st.subheader("✅ Detection Result")
             st.image(str(result_img_path), caption="Annotated Detection", use_column_width=True)
 
-            # Show Prediction Details with clear styling
-            st.markdown(
-                "<h3 style='color:#1B5E20; background:#E8F5E9; padding:6px; border-radius:6px;'>📊 Prediction Details</h3>",
-                unsafe_allow_html=True
-            )
-            
-            for box in results[0].boxes:
-                cls_id = int(box.cls.item())        # class ID
-                conf = float(box.conf.item())       # confidence
-                label = results[0].names[cls_id]    # class name
+            # Prediction Details removed as requested
 
-                st.markdown(
-                    f"""
-                    <div class="result-card">
-                        <b>🌿 Class:</b> {label}<br>
-                        <b>🎯 Confidence:</b> {conf:.2%}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-            # Add a download button for annotated image
             with open(result_img_path, "rb") as f:
                 st.download_button(
                     label="⬇️ Download Annotated Result",
                     data=f,
-                    file_name="detection_result.jpg",
+                    file_name="banana_disease_result.jpg",
                     mime="image/jpeg"
                 )
         else:
-            st.error("❌ No results detected!")
+            st.error("❌ No detections! Either no disease or model didn't load correctly.")
