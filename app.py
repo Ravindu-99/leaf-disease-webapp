@@ -58,7 +58,7 @@ with st.sidebar:
 
     st.markdown(
         """
-        <h2 style='color:#1B5E20; text-align:center;'>🍃 Leaf Detector</h2>
+        <h2 style='color:#1B5E20; text-align:center;'>🍃  Leaf Disease Detection </h2>
         <h3 style="color:#2E7D32; font-weight:bold;">How it works:</h3>
         <ol style="color:#4A8C2F; padding-left: 20px;">
             <li>Upload a clear leaf image</li>
@@ -94,7 +94,7 @@ model = load_model()
 # ----------------------------
 # 4️⃣ Main Title with blue color
 # ----------------------------
-st.markdown("<h2 style='text-align:center; color:#1565C0;'>🌱 Leaf Disease Detection Web App</h2>", unsafe_allow_html=True)
+st.markdown("<h2 style='text-align:center; color:#1565C0;'>🌱 Leaf Disease Detection </h2>", unsafe_allow_html=True)
 st.write("Upload a leaf image and let the AI model detect diseases with confidence levels.")
 
 # ----------------------------
